@@ -1,0 +1,62 @@
+{
+  "objects": [
+    {
+      "failureAndRerunMode": "CASCADE",
+      "resourceRole": "DataPipelineDefaultResourceRole",
+      "role": "DataPipelineDefaultRole",
+      "pipelineLogUri": "s3://aws-logs-acno-us-west-2/datapipeline",
+      "scheduleType": "ONDEMAND",
+      "name": "Default",
+      "id": "Default"
+    },
+    {
+      "scriptUri": "s3://aws-dvc-code/pig/dvc_etl_raw_aws.pig",
+      "name": "Pig-Parser",
+      "workerGroup": "ps4-cluster",
+      "runsOn": {
+        "ref": "EmrClusterId_U5EVc"
+      },
+      "id": "PigActivityId_APSEa",
+      "type": "PigActivity",
+      "scriptVariable": [
+        "input_dir='s3://aws-dvc-input/20150202/'",
+        "rejected_dir='s3://aws-dvc-reject/20151202/'",
+        "output_dir='s3://aws-dvc-output/20151202/'"
+      ]
+    },
+    {
+      "instanceType": "t1.micro",
+      "name": "Ec2Instance",
+      "id": "Ec2Instance",
+      "type": "Ec2Resource",
+      "terminateAfter": "5 Minutes"
+    },
+    {
+      "name": "Hadoop-EMR-Cluster",
+      "releaseLabel": "emr-5.2.1",
+      "id": "EmrClusterId_U5EVc",
+      "type": "EmrCluster",
+      "terminateAfter": "15 Minutes"
+    },
+    {
+      "name": "CliActivity",
+      "id": "CliActivity",
+      "runsOn": {
+        "ref": "Ec2Instance"
+      },
+      "type": "ShellCommandActivity",
+      "command": "(sudo yum -y update aws-cli) && (#{myAWSCLICmd})"
+    }
+  ],
+  "parameters": [
+    {
+      "watermark": "aws [options] <command> <subcommand> [parameters]",
+      "description": "AWS CLI command",
+      "id": "myAWSCLICmd",
+      "type": "String"
+    }
+  ],
+  "values": {
+    "myAWSCLICmd": "aws s3 ls s3://aws-dvc-input/20150202/"
+  }
+}
